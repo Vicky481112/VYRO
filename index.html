@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111126">
+    <title>VYRO — Your Campus, Your Circle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LANDING PAGE -->
+    <section id="landingPage" class="page landing-page">
+
+        <header class="site-header">
+            <a class="brand" href="#" onclick="showLanding(); return false;">
+                <span class="brand-icon">V</span>
+                <span>vyro<span class="brand-dot">.</span></span>
+            </a>
+
+            <nav class="landing-nav">
+                <a href="#about">Home</a>
+                <a href="#features">Features</a>
+                <a href="#college">College</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn btn-ghost" onclick="showAuth('login')">
+                    Log in
+                </button>
+                <button class="btn btn-primary" onclick="showAuth('signup')">
+                    Get Started <span>↗</span>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero" id="about">
+                <div class="hero-copy">
+
+
+                    <h1>
+                        Your campus.<br>
+                        Your people.<br>
+                        <span class="gradient-text">Your circle.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Meet classmates, join your department community,
+                        discover campus events and stay connected —
+                        all in one place.
+                    </p>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-large"
+                                onclick="showAuth('signup')">
+                            Get Started <span>↗</span>
+                        </button>
+
+                        <a href="#features" class="btn btn-outline btn-large">
+                            Explore VYRO <span>↓</span>
+                        </a>
+                    </div>
+
+                    <div class="trust-row">
+                        <span class="trust-icon">◈</span>
+                        Designed with privacy in mind
+                        <span class="trust-divider">·</span>
+                        Built for campus life
+                    </div>
+                </div>
+
+<div class="hero-art">
+
+    <!-- Purple background glow -->
+    <div class="art-glow"></div>
+
+    <!-- Background rings -->
+    <div class="art-ring ring-one"></div>
+    <div class="art-ring ring-two"></div>
+
+    <!-- Center VYRO logo -->
+    <div class="art-center">
+        <div class="art-center-logo" aria-label="VYRO logo">
+            <span class="logo-letter">V</span>
+            <span class="logo-dot">.</span>
+        </div>
+        <span>YOUR CAMPUS</span>
+    </div>
+
+    <!-- Top floating card -->
+    <div class="art-card art-card-top">
+        <div class="art-icon purple-icon">✦</div>
+        <div>
+            <strong>Campus community</strong>
+            <small>Find your people</small>
+        </div>
+        <span class="mini-check">✓</span>
+    </div>
+
+    <!-- Community card: replaces Alex Morgan -->
+    <div class="art-card art-card-left">
+        <div class="community-avatar">
+            <svg
+                class="community-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-label="Community"
+                role="img"
+            >
+                <circle cx="9" cy="8" r="3" />
+                <path d="M3.5 19V17.5C3.5 14.9 5.6 13 8.2 13H9.8C12.4 13 14.5 14.9 14.5 17.5V19" />
+                <path d="M15 5.3C16.8 5.5 18 6.8 18 8.5C18 10.2 16.8 11.5 15.2 11.7" />
+                <path d="M17 14C19.2 14.5 20.5 16 20.5 18V19" />
+            </svg>
+        </div>
+
+        <div class="community-info">
+            <strong>Create Together</strong>
+            <small>In one Platform</small>
+        </div>
+
+        <span class="community-status"></span>
+    </div>
+
+    <!-- Right floating card -->
+    <div class="art-card art-card-right">
+        <div class="art-icon orange-icon">✉</div>
+        <div>
+            <strong>New message request</strong>
+            <small>Your choice, always.</small>
+        </div>
+    </div>
+
+    <!-- Bottom floating card -->
+    <div class="art-card art-card-bottom">
+        <div class="art-icon green-icon">◷</div>
+        <div>
+            <strong>Campus Fest</strong>
+            <small>Something's happening!</small>
+        </div>
+    </div>
+
+    <!-- Decorative sparkles -->
+    <span class="sparkle sparkle-one">✳</span>
+    <span class="sparkle sparkle-two">✦</span>
+
+      </div>
+            </section>
+
+            <section class="feature-section public-section" id="features">
+                <div class="section-label">MADE FOR YOUR EVERYDAY</div>
+                <h2>Everything campus.<br><span>All in one circle.</span></h2>
+                <p class="section-description">
+                    Less confusion. More connection. A better campus experience.
+                </p>
+
+                <div class="public-feature-grid">
+                    <article class="public-feature">
+                        <div class="feature-symbol symbol-purple">✉</div>
+                        <span class="card-index">01 / CONNECT</span>
+                        <h3>Private Chats</h3>
+                        <p>
+                            Start conversations through message requests.
+                            Chat after the other student accepts.
+                        </p>
+                    </article>
+
+                    <article class="public-feature">
+                        <div class="feature-symbol symbol-orange">◎</div>
+                        <span class="card-index">02 / COMMUNITY</span>
+                        <h3>Student Groups</h3>
+                        <p>
+                            Connect with your department and discover
+                            communities built around college life.
+                        </p>
+                    </article>
+
+                    <article class="public-feature">
+                        <div class="feature-symbol symbol-green">✳</div>
+                        <span class="card-index">03 / UPDATES</span>
+                        <h3>Announcements</h3>
+                        <p>
+                            Keep college notices, activities and important
+                            updates together in one feed.
+                        </p>
+                    </article>
+
+                    <article class="public-feature">
+                        <div class="feature-symbol symbol-blue">◷</div>
+                        <span class="card-index">04 / WHAT'S NEXT</span>
+                        <h3>Meetings & Events</h3>
+                        <p>
+                            See upcoming meetings and campus activities
+                            without searching through multiple groups.
+                        </p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="college-section public-section" id="college">
+                <div class="college-visual">
+                    <div class="college-orbit">
+                        <span class="college-star">✦</span>
+                        <div class="college-monogram" aria-label="VYRO logo">
+                            <span class="logo-letter">V</span>
+                            <span class="logo-dot">.</span>
+                        </div>
+                    </div>
+                    <div class="college-floating-label">
+                        ONE CAMPUS · MANY POSSIBILITIES
+                    </div>
+                </div>
+
+                <div class="college-copy">
+                    <div class="section-label">YOUR COLLEGE, CONNECTED</div>
+                    <h2>Your college<br>deserves a <span>closer circle.</span></h2>
+                    <p>
+                        VYRO is designed to bring students, departments,
+                        announcements and campus activities into one
+                        organized digital space.
+                    </p>
+                    <p>
+                        College-specific information can be added by
+                        authorized administrators when the platform is set up.
+                    </p>
+                    <button class="btn btn-primary btn-large"
+                            onclick="showAuth('signup')">
+                        Join the community ↗
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <a class="brand" href="#" onclick="showLanding(); return false;">
+                <span class="brand-icon">V</span>
+                <span>vyro<span class="brand-dot">.</span></span>
+            </a>
+            <p>Designed for campus connection.</p>
+        </footer>
+    </section>
+
+    <!-- AUTHENTICATION PAGE -->
+    <section id="authPage" class="page auth-page hidden">
+        <div class="auth-decoration">
+            <a class="brand brand-light" href="#" onclick="showLanding(); return false;">
+                <span class="brand-icon">V</span>
+                <span>vyro<span class="brand-dot">.</span></span>
+            </a>
+
+            <div class="auth-art">
+                <div class="auth-art-circle"></div>
+                <div class="auth-art-logo" aria-label="VYRO logo">
+                    <span class="logo-letter">V</span>
+                    <span class="logo-dot">.</span>
+                </div>
+                <div class="auth-art-caption">
+                    YOUR CAMPUS.<br>
+                    <span>YOUR CIRCLE.</span>
+                </div>
+            </div>
+
+            <p class="auth-side-note">
+                A community designed around connection and choice.
+            </p>
+        </div>
+
+        <div class="auth-form-side">
+            <button class="back-link" onclick="showLanding()">← Back to home</button>
+
+            <div class="auth-form-wrap">
+                <div class="mobile-brand brand">
+                    <span class="brand-icon">V</span>
+                    <span>vyro<span class="brand-dot">.</span></span>
+                </div>
+
+                <div class="section-label" id="authEyebrow">
+                    YOUR CIRCLE STARTS HERE
+                </div>
+                <h1 id="authTitle">Create your account.</h1>
+                <p id="authSubtitle" class="auth-subtitle">
+                    Join your campus community in a few steps.
+                </p>
+
+                <form id="authForm">
+                    <div id="nameField" class="field-group">
+                        <label for="fullName">Full name</label>
+                        <input id="fullName" name="fullName" type="text"
+                               placeholder="Enter your name" autocomplete="name">
+                    </div>
+
+                    <div class="field-group">
+                        <label for="collegeEmail">Your email</label>
+                        <input id="collegeEmail" name="email" type="email"
+                               placeholder="you@college.edu"
+                               autocomplete="email" required>
+                        <small class="field-hint">
+                            Your email is private and isn't shown on your public profile.
+                        </small>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrap">
+                            <input id="password" name="password" type="password"
+                                   placeholder="At least 8 characters"
+                                   autocomplete="new-password" minlength="8" required>
+                            <button type="button" class="password-toggle"
+                                    onclick="togglePassword()">Show</button>
+                        </div>
+                        <div id="passwordHint" class="password-hint">
+                            Use 8+ characters with uppercase, lowercase,
+                            a number and a symbol.
+                        </div>
+                    </div>
+
+                    <div id="confirmField" class="field-group">
+                        <label for="confirmPassword">Confirm password</label>
+                        <input id="confirmPassword" type="password"
+                               placeholder="Enter your password again"
+                               autocomplete="new-password">
+                    </div>
+
+                    <label class="checkbox-row" id="termsRow">
+                        <input id="termsCheck" type="checkbox">
+                        <span>I agree to use VYRO respectfully and follow community rules.</span>
+                    </label>
+
+                    <button type="submit" id="authSubmit"
+                            class="btn btn-primary auth-submit">
+                        Create Account <span>↗</span>
+                    </button>
+                </form>
+
+                <div id="authMessage" class="inline-message" role="status"></div>
+
+                <div class="auth-switch">
+                    <span id="switchText">Already have an account?</span>
+                    <button id="switchButton" onclick="switchAuthMode()">Log in</button>
+                </div>
+
+                <div class="auth-demo-note">
+                    Demo only: use fictional details. No account is created on a server.
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- APP DASHBOARD -->
+    <section id="appPage" class="page app-page hidden">
+
+        <aside class="sidebar" id="sidebar">
+            <a class="brand sidebar-brand" href="#" onclick="showDashboard('home'); return false;">
+                <span class="brand-icon">V</span>
+                <span>vyro<span class="brand-dot">.</span></span>
+            </a>
+
+            <div class="workspace-label">YOUR WORKSPACE</div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-section="home" onclick="showDashboard('home')">
+                    <span class="nav-icon">⌂</span><span>Overview</span>
+                </button>
+                <button class="nav-item" data-section="chats" onclick="showDashboard('chats')">
+                    <span class="nav-icon">▤</span><span>Chats</span>
+                    <span class="nav-count" id="requestCount">1</span>
+                </button>
+                <button class="nav-item" data-section="groups" onclick="showDashboard('groups')">
+                    <span class="nav-icon">♧</span><span>Groups</span>
+                </button>
+                <button class="nav-item" data-section="departments" onclick="showDashboard('departments')">
+                    <span class="nav-icon">▦</span><span>Department</span>
+                </button>
+                <button class="nav-item" data-section="announcements" onclick="showDashboard('announcements')">
+                    <span class="nav-icon">◉</span><span>Announcements</span>
+                </button>
+                <button class="nav-item" data-section="meetings" onclick="showDashboard('meetings')">
+                    <span class="nav-icon">▦</span><span>Meetings & Events</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="workspace-label">ACCOUNT</div>
+                <button class="nav-item" data-section="profile" onclick="showDashboard('profile')">
+                    <span class="nav-icon">◎</span><span>My Profile</span>
+                </button>
+                <button class="nav-item" data-section="safety" onclick="showDashboard('safety')">
+                    <span class="nav-icon">⬡</span><span>Privacy & Safety</span>
+                </button>
+
+                <div class="sidebar-user">
+                    <div class="avatar avatar-purple" id="sidebarAvatar">S</div>
+                    <div class="sidebar-user-info">
+                        <strong id="sidebarName">Student</strong>
+                        <small>Campus member</small>
+                    </div>
+                    <button class="icon-button logout-button" onclick="logout()" title="Log out">↗</button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <button class="icon-button mobile-menu-button"
+                        onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+
+                <div class="breadcrumb">
+                    <span>VYRO</span>
+                    <span class="breadcrumb-slash">/</span>
+                    <strong id="breadcrumbTitle">Overview</strong>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="topbar-status">
+                        <span class="status-dot"></span>
+                        Demo workspace
+                    </div>
+                    <button class="top-avatar" id="topAvatar"
+                            onclick="showDashboard('profile')" title="My profile">S</button>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+
+                <!-- OVERVIEW -->
+                <section class="dashboard-section" id="section-home">
+                    <div class="welcome-row">
+                        <div>
+                            <div class="section-label">YOUR CAMPUS SPACE</div>
+                            <h1>Hey, <span id="welcomeName">Student</span> <span class="wave">✦</span></h1>
+                            <p class="muted-text">Your circle, your updates, your campus.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="showDashboard('chats')">
+                            Open messages ↗
+                        </button>
+                    </div>
+
+                    <div class="dashboard-hero">
+                        <div class="dashboard-hero-content">
+                            <span class="dark-pill">WELCOME TO YOUR CIRCLE</span>
+                            <h2>Good things happen<br>when we <span>connect.</span></h2>
+                            <p>
+                                Explore your department, check campus updates
+                                and discover what's coming up.
+                            </p>
+                            <button class="btn btn-light" onclick="showDashboard('groups')">
+                                Explore groups ↗
+                            </button>
+                        </div>
+                        <div class="dashboard-hero-art">
+                            <div class="dashboard-orbit orbit-a"></div>
+                            <div class="dashboard-orbit orbit-b"></div>
+                            <div class="dashboard-v">V<span>.</span></div>
+                            <div class="dashboard-art-tag">CAMPUS · COMMUNITY · CONNECTION</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-grid">
+                        <button class="stat-card" onclick="showDashboard('chats')">
+                            <div class="stat-top">
+                                <span class="stat-icon stat-purple">▤</span>
+                                <span class="stat-arrow">↗</span>
+                            </div>
+                            <strong id="chatStat">0</strong>
+                            <span>Accepted chats</span>
+                        </button>
+
+                        <button class="stat-card" onclick="showDashboard('groups')">
+                            <div class="stat-top">
+                                <span class="stat-icon stat-orange">♧</span>
+                                <span class="stat-arrow">↗</span>
+                            </div>
+                            <strong>3</strong>
+                            <span>Demo communities</span>
+                        </button>
+
+                        <button class="stat-card" onclick="showDashboard('announcements')">
+                            <div class="stat-top">
+                                <span class="stat-icon stat-green">◉</span>
+                                <span class="stat-arrow">↗</span>
+                            </div>
+                            <strong>3</strong>
+                            <span>Sample announcements</span>
+                        </button>
+
+                        <button class="stat-card" onclick="showDashboard('meetings')">
+                            <div class="stat-top">
+                                <span class="stat-icon stat-blue">▦</span>
+                                <span class="stat-arrow">↗</span>
+                            </div>
+                            <strong>2</strong>
+                            <span>Sample events</span>
+                        </button>
+                    </div>
+
+                    <div class="dashboard-columns">
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <div>
+                                    <h3>Campus bulletin</h3>
+                                    <p>Latest sample updates</p>
+                                </div>
+                                <button class="text-link" onclick="showDashboard('announcements')">View all ↗</button>
+                            </div>
+
+                            <div class="mini-update">
+                                <div class="mini-update-icon symbol-purple">✦</div>
+                                <div>
+                                    <strong>Welcome to VYRO</strong>
+                                    <p>Explore your new campus community.</p>
+                                    <span class="tiny-meta">DEMO ANNOUNCEMENT</span>
+                                </div>
+                            </div>
+
+                            <div class="mini-update">
+                                <div class="mini-update-icon symbol-orange">◷</div>
+                                <div>
+                                    <strong>Campus event preview</strong>
+                                    <p>Explore the meetings and events section.</p>
+                                    <span class="tiny-meta">SAMPLE EVENT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <div>
+                                    <h3>Message requests</h3>
+                                    <p>You're in control</p>
+                                </div>
+                                <span class="panel-count" id="homeRequestCount">1</span>
+                            </div>
+
+                            <div id="homeRequestPreview"></div>
+                            <button class="btn btn-outline full-width"
+                                    onclick="showDashboard('chats')">
+                                Manage requests
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CHATS -->
+                <section class="dashboard-section hidden" id="section-chats">
+                    <div class="page-heading">
+                        <div>
+                            <div class="section-label">PRIVATE CONNECTIONS</div>
+                            <h1>Your conversations<span class="heading-dot">.</span></h1>
+                            <p class="muted-text">Requests first. Conversations by choice.</p>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab-button active" data-chat-tab="requests"
+                                onclick="showChatTab('requests')">
+                            Requests <span class="tab-badge" id="requestTabCount">1</span>
+                        </button>
+                        <button class="tab-button" data-chat-tab="accepted"
+                                onclick="showChatTab('accepted')">
+                            Accepted chats <span class="tab-badge" id="acceptedTabCount">0</span>
+                        </button>
+                    </div>
+
+                    <div id="requestsPanel" class="chat-panel">
+                        <div id="requestList" class="request-list"></div>
+                    </div>
+
+                    <div id="acceptedPanel" class="chat-panel hidden">
+                        <div id="acceptedChatList" class="accepted-chat-list"></div>
+                    </div>
+                </section>
+
+                <!-- CHAT ROOM -->
+                <section class="dashboard-section hidden" id="section-chatroom">
+                    <div class="page-heading">
+                        <div>
+                            <div class="section-label">PRIVATE CONVERSATION</div>
+                            <h1 id="chatRoomTitle">Conversation<span class="heading-dot">.</span></h1>
+                            <p class="muted-text">Keep conversations respectful and safe.</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="showDashboard('chats')">
+                            ← Back to chats
+                        </button>
+                    </div>
+
+                    <div class="panel chat-room">
+                        <div class="chat-room-header">
+                            <div class="avatar avatar-purple" id="chatRoomAvatar">V</div>
+                            <div>
+                                <strong id="chatRoomName">Student</strong>
+                                <small>VYRO demo conversation</small>
+                            </div>
+                        </div>
+
+                        <div id="chatMessages" class="chat-messages">
+                            <div class="empty-state">
+                                <div class="empty-icon">✉</div>
+                                <h3>Your conversation starts here</h3>
+                                <p>Messages in this demo are local to the page session.</p>
+                            </div>
+                        </div>
+
+                        <form id="chatMessageForm" class="chat-compose">
+                            <input id="chatMessageInput" type="text"
+                                   placeholder="Write a message..." autocomplete="off" required>
+                            <button class="btn btn-primary" type="submit">Send ↗</button>
+                        </form>
+
+                        <div class="chat-room-actions">
+                            <button class="text-link" id="blockUserButton" type="button">Block user</button>
+                            <button class="text-link" id="reportUserButton" type="button">Report user</button>
+                        </div>
+                    </div>
+                </section>
+
+
+                <section class="dashboard-section hidden" id="section-departments">
+                    <div class="page-heading"><div><div class="section-label">BCA COMMUNITY</div><h1>BCA Students<span class="heading-dot">.</span></h1><p class="muted-text">Find students in your department by year.</p></div></div>
+                    <div class="panel" style="padding:20px;margin-bottom:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <strong>Department: BCA</strong>
+                        <label for="bcaYearFilter" class="muted-text">Year</label>
+                        <select id="bcaYearFilter" class="form-control" style="max-width:190px" onchange="loadBcaStudents()"><option value="all">All years</option><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select>
+                    </div>
+                    <div id="bcaStudentList" class="panel" style="padding:18px"><div class="empty-state"><p>Loading BCA students…</p></div></div>
+                </section>
+                <section class="dashboard-section hidden" id="section-groups">
+                    <div class="page-heading"><div><div class="section-label">CAMPUS COMMUNITIES</div><h1>Groups<span class="heading-dot">.</span></h1><p class="muted-text">Create or join BCA student groups.</p></div></div>
+                    <form id="createGroupForm" class="panel" style="padding:18px;margin-bottom:18px;display:grid;gap:10px"><h3>Create a group</h3><input id="newGroupName" placeholder="Group name" maxlength="60" required><textarea id="newGroupDescription" placeholder="What is this group about?" maxlength="300"></textarea><button class="btn btn-primary" type="submit">Create group ↗</button></form>
+                    <div id="campusGroupList" class="panel" style="padding:18px"></div>
+                </section>
+                <section class="dashboard-section hidden" id="section-profile">
+                    <div class="page-heading"><div><div class="section-label">YOUR ACCOUNT</div><h1>My Profile<span class="heading-dot">.</span></h1></div></div>
+                    <div class="panel" style="padding:22px;max-width:620px"><form id="profileForm" style="display:grid;gap:12px"><label>Display name</label><input id="profileDisplayName" maxlength="80" required><label>Department</label><input value="BCA" disabled><label>Year</label><select id="profileYear"><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select><label>Bio</label><textarea id="profileBio" maxlength="300" placeholder="A little about you"></textarea><button class="btn btn-primary" type="submit">Save profile</button></form><button class="btn btn-outline" style="margin-top:18px" onclick="logout()">Log out ↗</button></div>
+                </section>
+
+                    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+                    <script src="script.js"></script>
+</body>
+</html>
