@@ -361,8 +361,6 @@
       if (key === STORAGE.users || key === STORAGE.session) remove(key);
     });
 
-    if (!read(STORAGE.requests, null)) write(STORAGE.requests, []);
-    if (!read(STORAGE.accepted, null)) write(STORAGE.accepted, []);
 
     updateUserDetails();
     const pn = $("#profileDisplayName"); if (pn) pn.value = currentUser.name;
@@ -395,7 +393,8 @@
      DASHBOARD NAVIGATION
   ========================================== */
 
-  function showDashboard(section = "home") {
+  function showDashboard(section = "home", fromHistory = false) {
+    if (!fromHistory) { try { history.pushState({vyroSection:section}, "", `#${section}`); } catch (_) {} }
     const allowedSections = [
       "home",
       "chats",
@@ -648,60 +647,64 @@
   async function openChat(id) {
     const {data: membership}=await supabase.from("conversation_members").select("conversation_id").eq("conversation_id",id).eq("user_id",currentUser.id).maybeSingle();
     if(!membership) return showToast("Chat is not available.");
-    chatPartner={id};
-    const title=$("#chatRoomName"); if(title) title.textContent="VYRO conversation";
+    const {data: conv}=await supabase.from("conversations").select("request_id").eq("id",id).single();
+    const {data: req}=conv?.request_id ? await supabase.from("chat_requests").select("sender_id,recipient_id").eq("id",conv.request_id).single() : {data:null};
+    const otherId=req ? (req.sender_id===currentUser.id?req.recipient_id:req.sender_id) : null;
+    const {data: profile}=otherId ? await supabase.from("profiles").select("id,display_name").eq("id",otherId).maybeSingle() : {data:null};
+    chatPartner={id,userId:otherId,name:profile?.display_name||"Student"};
+    const title=$("#chatRoomName"); if(title) title.textContent=chatPartner.name;
     showDashboard("chatroom"); await renderMessages();
+    if(window.vyroMessageChannel) supabase.removeChannel(window.vyroMessageChannel);
+    window.vyroMessageChannel=supabase.channel(`vyro-chat-${id}`).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`conversation_id=eq.${id}`},()=>renderMessages()).subscribe();
   }
   async function renderMessages(){
     const box=$("#chatMessages"); if(!box||!chatPartner)return;
     const {data: rows,error}=await supabase.from("messages").select("id,sender_id,body,created_at").eq("conversation_id",chatPartner.id).order("created_at");
     if(error){box.textContent=error.message;return;}
-    box.innerHTML=(rows||[]).map(m=>`<div class="chat-message ${m.sender_id===currentUser.id?'message-mine':'message-theirs'}" style="max-width:78%;margin:10px ${m.sender_id===currentUser.id?'0 0 auto':'auto 0 0'};padding:10px 13px;border-radius:12px;background:${m.sender_id===currentUser.id?'#edf0ff':'#f3f5f8'}"><p>${escapeHTML(m.body)}</p><small>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></div>`).join("")||'<div class="empty-state"><p>Your conversation starts here.</p></div>';
+    box.innerHTML=(rows||[]).map(m=>`<div class="chat-message ${m.sender_id===currentUser.id?'own-message':'other-message'}"><p>${escapeHTML(m.body)}</p><small>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></div>`).join("")||'<div class="empty-state"><p>Your conversation starts here.</p></div>';
     box.scrollTop=box.scrollHeight;
   }
-  async function sendMessage(event){event.preventDefault();const input=$("#chatMessageInput")||$("#chatInput");const body=(input?.value||"").trim();if(!body||!chatPartner)return;const {error}=await supabase.from("messages").insert({conversation_id:chatPartner.id,sender_id:currentUser.id,body});if(error)return showToast(error.message);input.value="";await renderMessages();}
+  async function sendMessage(event){
+    event.preventDefault();const input=$("#chatMessageInput")||$("#chatInput");const body=(input?.value||"").trim();
+    if(!body||!chatPartner)return; if(body.length>4000)return showToast("Message is too long.");
+    const {error}=await supabase.from("messages").insert({conversation_id:chatPartner.id,sender_id:currentUser.id,body});
+    if(error)return showToast(error.message);input.value="";await renderMessages();
+  }
 
   /* ==========================================
      GROUP JOIN / LEAVE
   ========================================== */
 
-  function joinGroup(button, groupName) {
-    const groups = read(STORAGE.groups, []);
-    const alreadyJoined = groups.includes(groupName);
-
-    if (alreadyJoined) {
-      write(
-        STORAGE.groups,
-        groups.filter(name => name !== groupName)
-      );
-
-      button.textContent = "Join group ↗";
-      button.classList.remove("joined");
-
-      showToast(`You left ${groupName}.`);
+  async function joinGroup(button, groupName) {
+    if (!currentUser) return showToast("Please log in first.");
+    const { data: group, error: findError } = await supabase.from("campus_groups")
+      .select("id").eq("name", groupName).eq("department", "BCA").maybeSingle();
+    if (findError) return showToast(findError.message);
+    if (!group) return showToast("This group is not in the database yet. Create it from Groups.");
+    const { data: membership } = await supabase.from("group_members").select("group_id")
+      .eq("group_id", group.id).eq("user_id", currentUser.id).maybeSingle();
+    if (membership) {
+      const { error } = await supabase.from("group_members").delete()
+        .eq("group_id", group.id).eq("user_id", currentUser.id);
+      if (error) return showToast(error.message);
+      button.textContent = "Join group ↗"; button.classList.remove("joined");
+      showToast(`Left ${groupName}.`);
     } else {
-      groups.push(groupName);
-      write(STORAGE.groups, groups);
-
-      button.textContent = "Joined ✓";
-      button.classList.add("joined");
-
-      showToast(`Joined ${groupName} in demo mode.`);
+      const { error } = await supabase.from("group_members").insert({group_id:group.id,user_id:currentUser.id,membership_role:"member"});
+      if (error) return showToast(error.message);
+      button.textContent = "Joined ✓"; button.classList.add("joined");
+      showToast(`Joined ${groupName}.`);
     }
   }
 
-  function restoreJoinedGroups() {
-    const groups = read(STORAGE.groups, []);
-
+  async function restoreJoinedGroups() {
+    if (!currentUser) return;
+    const {data: memberships,error} = await supabase.from("group_members").select("group_id,campus_groups(name)").eq("user_id",currentUser.id);
+    if (error) return;
+    const names = new Set((memberships||[]).map(x=>x.campus_groups?.name).filter(Boolean));
     $$(".join-button").forEach(button => {
-      const match = button
-        .getAttribute("onclick")
-        ?.match(/joinGroup\(this,\s*'([^']+)'\)/);
-
-      if (match && groups.includes(match[1])) {
-        button.textContent = "Joined ✓";
-        button.classList.add("joined");
-      }
+      const match = button.getAttribute("onclick")?.match(/joinGroup\(this,\s*'([^']+)'\)/);
+      if (match && names.has(match[1])) { button.textContent="Joined ✓"; button.classList.add("joined"); }
     });
   }
 
@@ -710,147 +713,44 @@
   ========================================== */
 
   function openSafetyMenu(person) {
-    pendingSafetyPerson = person || chatPartner || {
-      id: "demo-student",
-      name: "Demo student"
-    };
-
-    const modal = $("#safetyModal");
-    const title = $("#safetyModalTitle");
-    const description = $("#safetyModalDescription");
-
-    if (title) {
-      title.textContent =
-        `Safety options for ${pendingSafetyPerson.name || "student"}`;
-    }
-
-    if (description) {
-      description.textContent =
-        "Choose whether to report this demo user or block them locally.";
-    }
-
-    modal?.classList.remove("hidden");
+    pendingSafetyPerson = person || chatPartner || null;
+    if (!pendingSafetyPerson?.id) return showToast("Open a student's profile or chat first.");
+    const title=$("#safetyModalTitle"), description=$("#safetyModalDescription");
+    if(title) title.textContent=`Safety options for ${pendingSafetyPerson.name || "student"}`;
+    if(description) description.textContent="Report or block this student. Your action is saved securely to VYRO.";
+    $("#safetyModal")?.classList.remove("hidden");
   }
-
-  function closeSafetyModal() {
-    $("#safetyModal")?.classList.add("hidden");
+  function closeSafetyModal(){ $("#safetyModal")?.classList.add("hidden"); }
+  async function renderSafetyLists(){
+    if(!currentUser)return;
+    const [{data:blocks,error:be},{data:reports,error:re}] = await Promise.all([
+      supabase.from("user_blocks").select("blocked_id,profiles!user_blocks_blocked_id_fkey(display_name)").eq("blocker_id",currentUser.id),
+      supabase.from("user_reports").select("id,reported_user_id,reason,created_at").eq("reporter_id",currentUser.id).order("created_at",{ascending:false})
+    ]);
+    const blockedList=$("#blockedList"), reportsList=$("#reportsList");
+    if(be||re){showToast((be||re).message);return;}
+    if(blockedList) blockedList.innerHTML=(blocks||[]).map(b=>`<div style="display:flex;justify-content:space-between;padding:10px 0"><span>${escapeHTML(b.profiles?.display_name||"Student")}</span><button class="btn btn-outline" data-unblock="${b.blocked_id}">Unblock</button></div>`).join("")||"<p>No blocked users.</p>";
+    if(reportsList) reportsList.innerHTML=(reports||[]).map(r=>`<div style="padding:10px 0"><strong>Report submitted</strong><p>${escapeHTML(r.reason)}</p><small>${escapeHTML(new Date(r.created_at).toLocaleString())}</small></div>`).join("")||"<p>No reports submitted.</p>";
   }
-
-  function renderSafetyLists() {
-    const blocked = read(STORAGE.blocked, []);
-    const reports = read(STORAGE.reports, []);
-
-    const blockedList = $("#blockedList");
-    const reportsList = $("#reportsList");
-
-    if (blockedList) {
-      blockedList.innerHTML = blocked.length
-        ? blocked.map(person => `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #edf0f5">
-            <span>${escapeHTML(person.name)}</span>
-            <button class="btn btn-outline"
-                    data-unblock="${escapeHTML(person.id)}">
-              Unblock
-            </button>
-          </div>
-        `).join("")
-        : `
-          <div class="empty-icon">⬡</div>
-          <h3>No blocked users</h3>
-          <p>Students you block in the demo will appear here.</p>
-        `;
-    }
-
-    if (reportsList) {
-      reportsList.innerHTML = reports.length
-        ? reports.map(report => `
-          <div style="padding:10px 0;border-bottom:1px solid #edf0f5">
-            <strong>${escapeHTML(report.name)}</strong>
-            <p>${escapeHTML(report.reason)}</p>
-            <small>
-              ${escapeHTML(new Date(report.time).toLocaleString())}
-              · Local demo only
-            </small>
-          </div>
-        `).join("")
-        : `
-          <div class="empty-icon">⚑</div>
-          <h3>No reports submitted</h3>
-          <p>Your demo report history will appear here.</p>
-        `;
-    }
+  async function submitReport(){
+    if(!currentUser||!pendingSafetyPerson?.id)return showToast("Select a student first.");
+    const reason=$("#reportReason")?.value||"Other";
+    const {error}=await supabase.from("user_reports").insert({reporter_id:currentUser.id,reported_user_id:pendingSafetyPerson.id,reason});
+    if(error)return showToast(error.message);
+    closeSafetyModal();await renderSafetyLists();showToast("Report sent to VYRO moderators.");
   }
-
-  function submitReport() {
-    const person = pendingSafetyPerson || chatPartner || {
-      id: "demo-student",
-      name: "Demo student"
-    };
-
-    const reason = $("#reportReason")?.value || "Other";
-    const reports = read(STORAGE.reports, []);
-
-    reports.unshift({
-      id: `report-${Date.now()}`,
-      personId: person.id,
-      name: person.name,
-      reason,
-      time: new Date().toISOString()
-    });
-
-    write(STORAGE.reports, reports);
-
-    closeSafetyModal();
-    renderSafetyLists();
-
-    showToast(
-      "Demo report saved on this device; it was not sent to a moderator."
-    );
+  async function blockStudent(){
+    if(!currentUser||!pendingSafetyPerson?.id)return showToast("Select a student first.");
+    const person=pendingSafetyPerson;
+    const {error}=await supabase.from("user_blocks").upsert({blocker_id:currentUser.id,blocked_id:person.id},{onConflict:"blocker_id,blocked_id"});
+    if(error)return showToast(error.message);
+    closeSafetyModal();await renderSafetyLists();await renderChats();
+    if(chatPartner?.id===person.id){chatPartner=null;showDashboard("chats");}
+    showToast(`${person.name||"Student"} blocked.`);
   }
-
-  function blockStudent() {
-    const person = pendingSafetyPerson || chatPartner || {
-      id: "demo-student",
-      name: "Demo student"
-    };
-
-    const blocked = read(STORAGE.blocked, []);
-
-    if (!blocked.some(item => item.id === person.id)) {
-      blocked.push({
-        id: person.id,
-        name: person.name
-      });
-    }
-
-    write(STORAGE.blocked, blocked);
-
-    write(
-      STORAGE.accepted,
-      getAccepted().filter(item => item.id !== person.id)
-    );
-
-    closeSafetyModal();
-    renderSafetyLists();
-    renderChats();
-    updateDashboardStats();
-
-    if (chatPartner?.id === person.id) {
-      chatPartner = null;
-      showDashboard("chats");
-    }
-
-    showToast(`${person.name} blocked in this browser demo.`);
-  }
-
-  function unblockStudent(id) {
-    write(
-      STORAGE.blocked,
-      read(STORAGE.blocked, []).filter(item => item.id !== id)
-    );
-
-    renderSafetyLists();
-    showToast("User unblocked in this demo.");
+  async function unblockStudent(id){
+    const {error}=await supabase.from("user_blocks").delete().eq("blocker_id",currentUser.id).eq("blocked_id",id);
+    if(error)return showToast(error.message);await renderSafetyLists();showToast("User unblocked.");
   }
 
   async function loadBcaStudents(){
@@ -946,10 +846,10 @@
       }
     });
 
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
-        closeSafetyModal();
-      }
+    document.addEventListener("keydown", event => { if (event.key === "Escape") closeSafetyModal(); });
+    window.addEventListener("popstate", event => {
+      if (currentUser) showDashboard(event.state?.vyroSection || "home", true);
+      else showLanding();
     });
 
     document.addEventListener("click", event => {

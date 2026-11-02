@@ -3256,3 +3256,16 @@ dialog p {
 
 
 
+
+/* VYRO chat readability: preserve the dark campus theme, remove pale message cards. */
+.chat-message,
+.chat-message.own-message {
+  background: transparent !important;
+  color: #f4f1ff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 2px !important;
+}
+.chat-message p { color: #f4f1ff !important; font-weight: 500; }
+.chat-message small, .chat-message time { color: #bcb5d8 !important; }
+.chat-messages { background: transparent !important; }
