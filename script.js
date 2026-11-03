@@ -400,6 +400,7 @@
       "chats",
       "chatroom",
       "groups",
+      "groupchat",
       "announcements",
       "meetings",
       "profile",
@@ -434,6 +435,7 @@
       chats: "Chats",
       chatroom: "Conversation",
       groups: "Groups",
+      groupchat: "Group chat",
       announcements: "Announcements",
       meetings: "Meetings & Events",
       profile: "My Profile",
@@ -451,6 +453,12 @@
 
     if (section === "chats") {
       renderChats();
+    }
+    if (section === "groups") {
+      loadCampusGroups();
+    }
+    if (section === "groupchat") {
+      renderGroupMessages();
     }
 
     if (section === "chatroom") {
@@ -592,30 +600,72 @@
 
   async function renderChats() {
     if (!currentUser || !supabase) return;
-    const { data: reqs, error: re } = await supabase.from("chat_requests").select("id,sender_id,recipient_id,status,created_at").eq("recipient_id",currentUser.id).eq("status","pending").order("created_at",{ascending:false});
-    const { data: sent, error: se } = await supabase.from("chat_requests").select("id,sender_id,recipient_id,status,created_at").eq("sender_id",currentUser.id).eq("status","pending");
-    const { data: convs, error: ce } = await supabase.from("conversation_members").select("conversation_id, conversations(id, request_id, chat_requests(id,sender_id,recipient_id), messages(body,created_at,sender_id))").eq("user_id",currentUser.id);
-    if (re || se || ce) { showToast((re||se||ce).message); return; }
-    const peopleIds=[...(reqs||[]).map(x=>x.sender_id),...(sent||[]).map(x=>x.recipient_id)];
-    const {data: people}=peopleIds.length ? await supabase.from("profiles").select("id,display_name,department,year").in("id",peopleIds) : {data:[]};
+    const { data: reqs, error: re } = await supabase.from("chat_requests")
+      .select("id,sender_id,recipient_id,status,created_at")
+      .eq("recipient_id", currentUser.id).eq("status", "pending").order("created_at", {ascending:false});
+    const { data: sent, error: se } = await supabase.from("chat_requests")
+      .select("id,sender_id,recipient_id,status,created_at")
+      .eq("sender_id", currentUser.id).eq("status", "pending");
+    const { data: accepted, error: ae } = await supabase.from("chat_requests")
+      .select("id,sender_id,recipient_id,status,created_at")
+      .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
+      .eq("status", "accepted").order("responded_at", {ascending:false});
+    if (re || se || ae) { showToast((re || se || ae).message); return; }
+
+    const reqIds=[...(reqs||[]).map(x=>x.sender_id),...(sent||[]).map(x=>x.recipient_id),
+      ...(accepted||[]).flatMap(x=>[x.sender_id,x.recipient_id])].filter(Boolean);
+    const uniqueIds=[...new Set(reqIds)];
+    const {data: people}=uniqueIds.length ? await supabase.from("profiles")
+      .select("id,display_name,department,year").in("id",uniqueIds) : {data:[]};
     const names=new Map((people||[]).map(p=>[p.id,p]));
     const requestList=$("#requestList"), acceptedList=$("#acceptedChatList");
-    if(requestList) requestList.innerHTML=(reqs||[]).length?(reqs||[]).map(r=>{const p=names.get(r.sender_id)||{};return `<div class="request-card" style="display:flex;gap:12px;align-items:center;padding:15px;border-bottom:1px solid #edf0f5"><div class="avatar avatar-purple">${escapeHTML(initials(p.display_name))}</div><div style="flex:1"><strong>${escapeHTML(p.display_name||"BCA Student")}</strong><p class="muted-text">BCA · Year ${p.year||"—"}</p></div><button class="btn btn-primary" data-accept-request="${r.id}">Accept</button><button class="btn btn-outline" data-decline-request="${r.id}">Decline</button></div>`}).join(""):'<div class="empty-state"><p>No pending requests.</p></div>';
-    const conversations=(convs||[]).map(x=>x.conversations).filter(Boolean);
-    const otherIds=conversations.map(c=>c.chat_requests?.sender_id===currentUser.id?c.chat_requests?.recipient_id:c.chat_requests?.sender_id).filter(Boolean);
-    const {data: others}=otherIds.length?await supabase.from("profiles").select("id,display_name,year").in("id",otherIds):{data:[]};
-    const otherMap=new Map((others||[]).map(p=>[p.id,p]));
-    if(acceptedList) acceptedList.innerHTML=conversations.length?conversations.map(c=>{const oid=c.chat_requests?.sender_id===currentUser.id?c.chat_requests?.recipient_id:c.chat_requests?.sender_id;const p=otherMap.get(oid)||{};return `<button class="accepted-chat-row" data-open-chat="${c.id}" style="display:flex;gap:12px;width:100%;padding:14px;background:transparent;border:0;border-bottom:1px solid #edf0f5;text-align:left"><strong>${escapeHTML(p.display_name||"BCA Student")}</strong><span style="margin-left:auto">Open ↗</span></button>`}).join(""):'<div class="empty-state"><p>No accepted chats yet.</p></div>';
-    const count=(reqs||[]).length; ["#requestCount","#requestTabCount","#homeRequestCount"].forEach(sel=>{const el=$(sel);if(el)el.textContent=count});
+    if(requestList) requestList.innerHTML=(reqs||[]).length?(reqs||[]).map(r=>{
+      const p=names.get(r.sender_id)||{};
+      return `<div class="request-card" style="display:flex;gap:12px;align-items:center;padding:15px;border-bottom:1px solid #edf0f5">
+        <div class="avatar avatar-purple">${escapeHTML(initials(p.display_name))}</div>
+        <div style="flex:1"><strong>${escapeHTML(p.display_name||"BCA Student")}</strong><p class="muted-text">BCA · Year ${p.year||"—"}</p></div>
+        <button class="btn btn-primary" data-accept-request="${r.id}">Accept</button>
+        <button class="btn btn-outline" data-decline-request="${r.id}">Decline</button></div>`;
+    }).join(""):'<div class="empty-state"><p>No pending requests.</p></div>';
+
+    const acceptedListRows=(accepted||[]).map(r=>{
+      const oid=r.sender_id===currentUser.id?r.recipient_id:r.sender_id, p=names.get(oid)||{};
+      return `<button class="accepted-chat-row" data-request-chat="${r.id}" style="display:flex;gap:12px;width:100%;padding:14px;background:transparent;border:0;border-bottom:1px solid #edf0f5;text-align:left">
+        <strong>${escapeHTML(p.display_name||"BCA Student")}</strong><span style="margin-left:auto">Accepted · Open ↗</span></button>`;
+    });
+    if(acceptedList) acceptedList.innerHTML=acceptedListRows.join("")||'<div class="empty-state"><p>No accepted chats yet.</p></div>';
+
+    // Recent chats are accepted conversations with at least one message, ordered by latest activity.
+    const {data: convs, error: ce}=await supabase.from("conversation_members")
+      .select("conversation_id, conversations(id,request_id,messages(body,created_at,sender_id))")
+      .eq("user_id",currentUser.id);
+    if(ce){showToast(ce.message);return;}
+    const recent=(convs||[]).map(x=>x.conversations).filter(Boolean).map(c=>{
+      const msgs=(c.messages||[]).slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+      return {...c,last:msgs[0]};
+    }).filter(c=>c.last).sort((a,b)=>new Date(b.last.created_at)-new Date(a.last.created_at));
+    const requestIds=recent.map(c=>c.request_id).filter(Boolean);
+    const {data: recentReqs}=requestIds.length?await supabase.from("chat_requests")
+      .select("id,sender_id,recipient_id").in("id",requestIds):{data:[]};
+    const reqMap=new Map((recentReqs||[]).map(r=>[r.id,r]));
+    const recentBox=$("#recentChatList");
+    if(recentBox) recentBox.innerHTML=recent.map(c=>{
+      const r=reqMap.get(c.request_id), oid=r?(r.sender_id===currentUser.id?r.recipient_id:r.sender_id):null, p=names.get(oid)||{};
+      return `<button class="accepted-chat-row" data-open-chat="${c.id}" style="display:flex;gap:12px;width:100%;padding:14px;background:transparent;border:0;border-bottom:1px solid #edf0f5;text-align:left">
+        <span style="flex:1"><strong>${escapeHTML(p.display_name||"BCA Student")}</strong><small style="display:block;opacity:.7">${escapeHTML(c.last.body||"")}</small></span>
+        <span>Recent · Open ↗</span></button>`;
+    }).join("")||'<div class="empty-state"><p>No recent conversations yet.</p></div>';
+
+    const count=(reqs||[]).length;
+    ["#requestCount","#requestTabCount","#homeRequestCount"].forEach(sel=>{const el=$(sel);if(el)el.textContent=count});
+    const acceptedCount=$("#acceptedTabCount"); if(acceptedCount)acceptedCount.textContent=(accepted||[]).length;
   }
 
   function showChatTab(tab) {
-    const selectedTab = tab === "accepted"
-      ? "accepted"
-      : "requests";
-
+    const selectedTab = ["accepted","recent"].includes(tab) ? tab : "requests";
     $("#requestsPanel")?.classList.toggle("hidden", selectedTab !== "requests");
     $("#acceptedPanel")?.classList.toggle("hidden", selectedTab !== "accepted");
+    $("#recentPanel")?.classList.toggle("hidden", selectedTab !== "recent");
 
     $$("[data-chat-tab]").forEach(button => {
       button.classList.toggle(
@@ -760,7 +810,7 @@
     const year=$("#bcaYearFilter")?.value||"all"; if(year!=="all")q=q.eq("year",Number(year));
     const {data,error}=await q; if(error){box.textContent=error.message;return;}
     const students=(data||[]).filter(p=>p.id!==currentUser.id);
-    box.innerHTML=students.length?students.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:13px;border-bottom:1px solid #edf0f5"><div class="avatar avatar-purple">${escapeHTML(initials(p.display_name))}</div><div style="flex:1"><strong>${escapeHTML(p.display_name)}</strong><p class="muted-text">BCA · Year ${p.year||1}</p></div><button class="btn btn-outline" onclick="sendChatRequest('${p.id}')">Request chat</button></div>`).join(""):'<div class="empty-state"><p>No other BCA students found for this year.</p></div>';
+    box.innerHTML=students.length?students.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:13px;border-bottom:1px solid #edf0f5"><div class="avatar avatar-purple">${escapeHTML(initials(p.display_name))}</div><div style="flex:1"><strong>${escapeHTML(p.display_name)}</strong><p class="muted-text">BCA · Year ${p.year||1}</p></div><button class="btn btn-outline" data-request-to="${p.id}" onclick="sendChatRequest('${p.id}')">Request chat</button></div>`).join(""):'<div class="empty-state"><p>No other BCA students found for this year.</p></div>';
   }
   async function sendChatRequest(recipient){
     if(!currentUser||recipient===currentUser.id)return;
@@ -768,17 +818,95 @@
     if(checkError)return showToast(checkError.message);
     if(existing?.length)return showToast("A request or chat already exists with this student.");
     const {error}=await supabase.from("chat_requests").insert({sender_id:currentUser.id,recipient_id:recipient,status:"pending"});
-    if(error)return showToast(error.message);showToast("Chat request sent.");
+    if(error)return showToast(error.message);
+    $$(`[data-request-to="${recipient}"]`).forEach(btn=>{btn.textContent="Request sent";btn.disabled=true;});
+    showToast("Chat request sent.");
   }
+  let activeGroupId = null;
   async function loadCampusGroups(){
-    const box=$("#campusGroupList");if(!box||!currentUser)return;
-    const {data,error}=await supabase.from("campus_groups").select("id,name,description,created_by,department").eq("department","BCA").order("created_at",{ascending:false});
+    const box=$("#campusGroupList"); if(!box||!currentUser)return;
+    const {data: groups,error}=await supabase.from("campus_groups")
+      .select("id,name,description,created_by,department").eq("department","BCA").order("created_at",{ascending:false});
     if(error){box.textContent=error.message;return;}
-    const {data: joined}=await supabase.from("group_members").select("group_id").eq("user_id",currentUser.id);const ids=new Set((joined||[]).map(x=>x.group_id));
-    box.innerHTML=(data||[]).map(g=>`<div style="padding:14px;border-bottom:1px solid #edf0f5"><strong>${escapeHTML(g.name)}</strong><p class="muted-text">${escapeHTML(g.description||"")}</p><button class="btn btn-outline" onclick="joinCampusGroup('${g.id}')">${ids.has(g.id)?'Joined':'Join group'}</button></div>`).join("")||'<div class="empty-state"><p>No groups yet. Create the first one.</p></div>';
+    const {data: memberships}=await supabase.from("group_members").select("group_id,user_id,membership_role")
+      .eq("user_id",currentUser.id);
+    const joined=new Set((memberships||[]).map(x=>x.group_id));
+    const ids=(groups||[]).map(g=>g.id);
+    const {data: allMembers}=ids.length?await supabase.from("group_members").select("group_id,user_id")
+      .in("group_id",ids):{data:[]};
+    const counts=new Map(); (allMembers||[]).forEach(m=>counts.set(m.group_id,(counts.get(m.group_id)||0)+1));
+    box.innerHTML=(groups||[]).map(g=>{
+      const isJoined=joined.has(g.id), isOwner=g.created_by===currentUser.id;
+      return `<div style="padding:16px;border-bottom:1px solid #edf0f5">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><strong>${escapeHTML(g.name)}</strong><span class="muted-text">${counts.get(g.id)||0} members</span></div>
+        <p class="muted-text">${escapeHTML(g.description||"")}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${isJoined?`<button class="btn btn-primary" onclick="openCampusGroup('${g.id}','${escapeHTML(g.name).replace(/'/g,"&#39;")}')">Open group chat</button>`:`<button class="btn btn-outline" onclick="joinCampusGroup('${g.id}')">Join group</button>`}
+          ${isOwner?`<button class="btn btn-outline" onclick="manageGroupMembers('${g.id}')">Add members</button>`:""}
+          ${isOwner?`<button class="btn btn-outline" onclick="manageGroupMembers('${g.id}')">View members</button>`:""}
+        </div>
+        <div id="groupMembers-${g.id}" style="margin-top:10px"></div>
+      </div>`;
+    }).join("")||'<div class="empty-state"><p>No groups yet. Create the first one.</p></div>';
   }
-  async function createCampusGroup(event){event.preventDefault();const name=$("#newGroupName")?.value.trim(),description=$("#newGroupDescription")?.value.trim();if(!name)return;const {data,error}=await supabase.from("campus_groups").insert({name,description,department:"BCA",created_by:currentUser.id,visibility:"department"}).select("id").single();if(error)return showToast(error.message);const join=await supabase.from("group_members").insert({group_id:data.id,user_id:currentUser.id,membership_role:"owner"});if(join.error)return showToast(join.error.message);event.target.reset();await loadCampusGroups();showToast("Group created.");}
-  async function joinCampusGroup(id){const {error}=await supabase.from("group_members").insert({group_id:id,user_id:currentUser.id,membership_role:"member"});if(error&& !/duplicate/i.test(error.message))return showToast(error.message);await loadCampusGroups();showToast("Joined group.");}
+  async function createCampusGroup(event){
+    event.preventDefault(); const name=$("#newGroupName")?.value.trim(),description=$("#newGroupDescription")?.value.trim(); if(!name)return;
+    const {data,error}=await supabase.from("campus_groups").insert({name,description,department:"BCA",created_by:currentUser.id,visibility:"department"}).select("id").single();
+    if(error)return showToast(error.message);
+    const join=await supabase.from("group_members").insert({group_id:data.id,user_id:currentUser.id,membership_role:"owner"});
+    if(join.error)return showToast("Group created but owner membership failed: "+join.error.message);
+    event.target.reset(); await loadCampusGroups(); showToast("Group created. You are the owner.");
+  }
+  async function joinCampusGroup(id){
+    const {error}=await supabase.from("group_members").upsert({group_id:id,user_id:currentUser.id,membership_role:"member"},{onConflict:"group_id,user_id"});
+    if(error)return showToast(error.message);
+    await loadCampusGroups(); showToast("Joined group. You can now open its chat.");
+  }
+  async function manageGroupMembers(groupId){
+    const target=$("#groupMembers-"+groupId); if(!target)return;
+    const {data: group}=await supabase.from("campus_groups").select("created_by").eq("id",groupId).single();
+    if(group?.created_by!==currentUser.id)return showToast("Only the group creator can add members.");
+    const {data: members}=await supabase.from("group_members").select("user_id").eq("group_id",groupId);
+    const existing=new Set((members||[]).map(m=>m.user_id));
+    const {data: students,error}=await supabase.from("profiles").select("id,display_name,year").eq("department","BCA").neq("id",currentUser.id).order("display_name");
+    if(error)return showToast(error.message);
+    target.innerHTML=`<div style="padding:12px;border:1px solid #7775;border-radius:12px"><strong>Group members (${existing.size})</strong>
+      ${(students||[]).map(p=>`<label style="display:flex;gap:9px;align-items:center;padding:7px"><input type="checkbox" value="${p.id}" ${existing.has(p.id)?"checked disabled":""}><span>${escapeHTML(p.display_name||"BCA Student")} · Year ${p.year||"—"} ${existing.has(p.id)?"(Added)":""}</span></label>`).join("")}
+      <button class="btn btn-primary" style="margin-top:10px" onclick="addSelectedGroupMembers('${groupId}')">Add selected members</button></div>`;
+  }
+  async function addSelectedGroupMembers(groupId){
+    const target=$("#groupMembers-"+groupId); if(!target)return;
+    const selected=[...target.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)')].map(x=>x.value);
+    if(!selected.length)return showToast("Select at least one student.");
+    const {error}=await supabase.from("group_members").insert(selected.map(user_id=>({group_id:groupId,user_id,membership_role:"member"})));
+    if(error)return showToast("Members were not added: "+error.message);
+    showToast(`${selected.length} member(s) added successfully.`);
+    await loadCampusGroups(); await manageGroupMembers(groupId);
+  }
+  async function openCampusGroup(id,name){
+    const {data: member}=await supabase.from("group_members").select("group_id").eq("group_id",id).eq("user_id",currentUser.id).maybeSingle();
+    if(!member)return showToast("Join this group before opening its chat.");
+    activeGroupId=id; const heading=$("#groupChatHeading"); if(heading)heading.textContent=name+" chat";
+    showDashboard("groupchat"); await renderGroupMessages();
+    if(window.vyroGroupChannel)supabase.removeChannel(window.vyroGroupChannel);
+    window.vyroGroupChannel=supabase.channel("vyro-group-"+id)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"group_messages",filter:`group_id=eq.${id}`},renderGroupMessages).subscribe();
+  }
+  async function renderGroupMessages(){
+    const box=$("#groupChatMessages"); if(!box||!activeGroupId)return;
+    const {data: rows,error}=await supabase.from("group_messages")
+      .select("id,user_id,body,created_at,profiles(display_name)").eq("group_id",activeGroupId).order("created_at");
+    if(error){box.textContent=error.message;return;}
+    box.innerHTML=(rows||[]).map(m=>`<div class="chat-message ${m.user_id===currentUser.id?'own-message':'other-message'}"><strong>${escapeHTML(m.profiles?.display_name||"Member")}</strong><p>${escapeHTML(m.body)}</p><small>${new Date(m.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small></div>`).join("")||'<div class="empty-state"><p>No messages yet. Start the conversation.</p></div>';
+    box.scrollTop=box.scrollHeight;
+  }
+  async function sendGroupMessage(event){
+    event.preventDefault(); const input=$("#groupChatInput"),body=(input?.value||"").trim();
+    if(!body||!activeGroupId)return;
+    const {error}=await supabase.from("group_messages").insert({group_id:activeGroupId,user_id:currentUser.id,body});
+    if(error)return showToast("Message not sent: "+error.message);
+    input.value=""; await renderGroupMessages();
+  }
   async function saveProfile(event){event.preventDefault();const display_name=$("#profileDisplayName").value.trim(),year=Number($("#profileYear").value),bio=$("#profileBio").value.trim();const {error}=await supabase.from("profiles").update({display_name,department:"BCA",year,bio}).eq("id",currentUser.id);if(error)return showToast(error.message);currentUser.name=display_name;currentUser.year=year;currentUser.bio=bio;showToast("Profile saved.");await loadBcaStudents();}
 
   /* ==========================================
@@ -834,6 +962,7 @@
     $("#profileForm")?.addEventListener("submit", saveProfile);
 
     $("#chatMessageForm")?.addEventListener("submit", sendMessage);
+    $("#groupChatForm")?.addEventListener("submit", sendGroupMessage);
 
     $("#globalSearch")?.addEventListener(
       "keydown",
@@ -871,6 +1000,12 @@
         return;
       }
 
+      const requestChatButton = event.target.closest("[data-request-chat]");
+      if (requestChatButton) {
+        const reqId=requestChatButton.dataset.requestChat;
+        (async()=>{const {data: conv}=await supabase.from("conversations").select("id").eq("request_id",reqId).maybeSingle(); if(conv)openChat(conv.id); else showToast("Accepted chat is still being prepared. Please refresh.");})();
+        return;
+      }
       const openChatButton = event.target.closest(
         "[data-open-chat]"
       );
@@ -919,6 +1054,7 @@
     submitReport,
     blockStudent,
     showToast, loadBcaStudents, sendChatRequest, joinCampusGroup,
+    manageGroupMembers, addSelectedGroupMembers, openCampusGroup,
 
     // Compatibility with alternate button markup
     navigate: showDashboard
