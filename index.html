@@ -559,8 +559,10 @@
                         </button>
                         <button class="tab-button" data-chat-tab="accepted"
                                 onclick="showChatTab('accepted')">
-                            Accepted chats <span class="tab-badge" id="acceptedTabCount">0</span>
+                            Accepted <span class="tab-badge" id="acceptedTabCount">0</span>
                         </button>
+                        <button class="tab-button" data-chat-tab="recent"
+                                onclick="showChatTab('recent')">Recent chats</button>
                     </div>
 
                     <div id="requestsPanel" class="chat-panel">
@@ -569,6 +571,9 @@
 
                     <div id="acceptedPanel" class="chat-panel hidden">
                         <div id="acceptedChatList" class="accepted-chat-list"></div>
+                    </div>
+                    <div id="recentPanel" class="chat-panel hidden">
+                        <div id="recentChatList" class="accepted-chat-list"></div>
                     </div>
                 </section>
 
@@ -630,9 +635,10 @@
                     <form id="createGroupForm" class="panel" style="padding:18px;margin-bottom:18px;display:grid;gap:10px"><h3>Create a group</h3><input id="newGroupName" placeholder="Group name" maxlength="60" required><textarea id="newGroupDescription" placeholder="What is this group about?" maxlength="300"></textarea><button class="btn btn-primary" type="submit">Create group ↗</button></form>
                     <div id="campusGroupList" class="panel" style="padding:18px"></div>
                 </section>
+                <section class="dashboard-section hidden" id="section-groupchat"><div class="page-heading"><div><div class="section-label">CAMPUS COMMUNITY</div><h1 id="groupChatHeading">Group chat<span class="heading-dot">.</span></h1><p class="muted-text">Messages are visible to group members.</p></div><button class="btn btn-outline" onclick="showDashboard('groups')">← Groups</button></div><div id="groupChatMessages" class="chat-messages panel" style="padding:18px;min-height:280px;max-height:55vh;overflow:auto"></div><form id="groupChatForm" class="chat-compose" style="display:flex;gap:8px;margin-top:12px"><input id="groupChatInput" placeholder="Message your group…" maxlength="4000" required><button class="btn btn-primary" type="submit">Send ↗</button></form></section>
                 <section class="dashboard-section hidden" id="section-profile">
                     <div class="page-heading"><div><div class="section-label">YOUR ACCOUNT</div><h1>My Profile<span class="heading-dot">.</span></h1></div></div>
-                    <div class="panel" style="padding:22px;max-width:620px"><form id="profileForm" style="display:grid;gap:12px"><label>Display name</label><input id="profileDisplayName" maxlength="80" required><label>Department</label><input value="BCA" disabled><label>Year</label><select id="profileYear"><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select><label>Bio</label><textarea id="profileBio" maxlength="300" placeholder="A little about you"></textarea><button class="btn btn-primary" type="submit">Save profile</button></form><button class="btn btn-outline" style="margin-top:18px" onclick="logout()">Log out ↗</button></div>
+                    <div class="panel" style="padding:22px;max-width:620px"><form id="profileForm" style="display:grid;gap:12px"><label>Display name</label><input id="profileDisplayName" maxlength="80" required><label>Department</label><input value="BCA" disabled><label>Year</label><select id="profileYear"><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select><label>Bio</label><textarea id="profileBio" maxlength="300" placeholder="A little about you"></textarea><button class="btn btn-primary" type="submit">Save profile</button></form><button class="btn btn-outline" style="margin-top:18px" onclick="logout()">Log out ↗</button><button class="btn btn-outline" style="margin-top:10px;border-color:#c44;color:#e66" onclick="deleteVyroAccount()">Delete account permanently</button></div>
                 </section>
 
                     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
